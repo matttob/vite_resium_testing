@@ -17,11 +17,7 @@ function App() {
   const handleReady = tileset => {
     
     console.log(tileset.statistics)
-    console.log("test")
-    console.log(viewer)
-    viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
-    viewer.zoomTo(tileset)
-    viewer.scene.requestRenderMode = true;
+
   
    
   };
