@@ -40,3 +40,33 @@
 .read-the-docs {
   color: #888;
 }
+
+
+.map-container{
+  position: absolute;
+  width: 1200px;
+  height: 800px;
+  overflow: hidden;
+}
+
+.info-div{
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  color: black;
+  background: white;
+  padding: 5px 8px;
+  border-radius: 5px;
+}
+
+.trito-logo{
+  position: absolute;
+  bottom: 195px;
+  left: -5px;
+  width: 80px;
+  height: 80px;
+  border-radius: 5px;
+
+  background: white;
+}
+
