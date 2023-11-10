@@ -11,7 +11,11 @@
   },
   "dependencies": {
     "cesium": "^1.110.0",
+    "d3-scale": "^4.0.2",
+    "date-fns": "^2.30.0",
     "react": "^18.2.0",
+    "react-compound-slider": "^3.4.0",
+    "react-custom-switcher": "^1.0.10",
     "react-dom": "^18.2.0",
     "resium": "^1.17.2"
   },
