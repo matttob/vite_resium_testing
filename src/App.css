@@ -1,18 +1,19 @@
 #root {
-  max-width: 1280px;
+  /* max-width: 1280px; */
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  color: black;
 }
 
-
-
-.map-container{
+/* .map-container{
   position: absolute;
-  width: 1200px;
+  width: 1440px;
   height: 800px;
+  bottom: 5px;
+  left:0px;
   overflow: hidden;
-}
+} */
 
 .info-div{
   position: absolute;
@@ -26,9 +27,8 @@
 
 .trito-logo{
   position: absolute;
-  bottom: 195px;
-  left: -5px;
-  width: 80px;
+  top: 10px;
+  left: 10px;
   height: 80px;
   border-radius: 5px;
 
@@ -37,8 +37,9 @@
 
 .bathy-checkBox{
   position: absolute;
-  bottom: 5x;
-  left: 200x;
+  top: 50px;
+  right: 10px;
+  background: rgb(60, 54, 54);
 }
 
 

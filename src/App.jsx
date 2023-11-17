@@ -5,27 +5,31 @@ import { Cartesian3, Color, viewerCesiumInspectorMixin ,viewerCesium3DTilesInspe
 import { Viewer,Scene, Entity , GeoJsonDataSource, KmlDataSource,CameraFlyTo, Cesium3DTileset, ScreenSpaceEventHandler,PointGraphics,EntityDescription ,BillboardGraphics,ImageryLayer,useCesium} from 'resium'
 import './App.css'
 import { CustomSwitcher } from 'react-custom-switcher'
-
+import useScreenSize from './useScreenSize';
 
 const optionsPrimary = [
   {
     label:  <div style={{ fontSize: 15,color: 'white', whiteSpace: "nowrap" }}>2022</div>,
     value: 2022,
-    color: "#00ace6"
+    color: "#32a871"
   },
   {
     label: <div style={{ fontSize: 15,color: 'white', whiteSpace: "nowrap" }}>2023</div>,
     value: 2023,
-    color: "#007399"
+    color: "#32a871"
   }
 
 ];
+
+
 
 //input cesium ion api access token
 Ion.defaultAccessToken ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzYjM5M2JiYy03ODhiLTQ2YmUtODhkNC0yNTdlZTQ2Y2RkOGMiLCJpZCI6MTU4OTgxLCJpYXQiOjE2OTY0MzgyNjJ9.4DRtmcWO-nxpnuMP8hNoq8AYgyy3ZQYYfxuZQ_p0W1w";
 
 
 function App() {
+
+  const screenSize = useScreenSize();
   const emodnet_provider = new WebMapServiceImageryProvider({
     url : 'https://ows.emodnet-bathymetry.eu/wms',
     layers :  'mean_multicolour',
@@ -75,11 +79,11 @@ function App() {
   }
  
 //  check box for turning on or off image layer of bathymetry
+
  const [isChecked, setIsChecked] = useState(false)
  const Checkbox = () => {
   const checkHandler = () => {
       setIsChecked(!isChecked)}
-
     return (
       <div>
         <input
@@ -88,7 +92,7 @@ function App() {
           checked={isChecked}
           onChange={checkHandler}
         />
-        <label htmlFor="checkbox">Show bathymetry </label>
+        <label htmlFor="checkbox" style={{ color: 'white' , fontFamily: 'Inter'}}> Bathymetry </label>
       </div>
     )
   }
@@ -117,8 +121,14 @@ function App() {
   let viewer;
 
   return (
-    
-    <div className="map-container">
+    <div>
+    <img src="./new_logo_draft.png" alt=" "  className="trito-logo"/>
+    <div className="map-container"
+    style={{position: 'fixed',
+            width: screenSize.width, 
+            height: '700px',
+            bottom: '0px',
+            left:'0px'}} >
 
       <Viewer ref={e => {viewer = e && e.cesiumElement}}>
 
@@ -190,17 +200,18 @@ function App() {
         callback={(currentValue) => setSliderYear(currentValue)}></CustomSwitcher>
         </div>}
 
-      <div className="bathy-checkBox">
+        <div className="bathy-checkBox">
         <Checkbox/>
         </div>
 
       {isHovering && <div className="info-div"> {hoverBox} </div>}
-      <img src="./Logo2.png" alt=" "  className="trito-logo"/>
 
 
 
 
 
+
+    </div>
     </div>
   );
 }
