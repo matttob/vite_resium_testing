@@ -5,16 +5,16 @@ import { Cartesian3, Color, viewerCesiumInspectorMixin ,viewerCesium3DTilesInspe
 import { Viewer,Scene, Entity , GeoJsonDataSource, KmlDataSource,CameraFlyTo, Cesium3DTileset, ScreenSpaceEventHandler,PointGraphics,EntityDescription ,BillboardGraphics,ImageryLayer,useCesium} from 'resium'
 import './App.css'
 import { CustomSwitcher } from 'react-custom-switcher'
-import useScreenSize from './useScreenSize';
+
 
 const optionsPrimary = [
   {
-    label:  <div style={{ fontSize: 15,color: 'white', whiteSpace: "nowrap" }}>2022</div>,
+    label:  <div style={{ fontSize: 15,color: 'white', whiteSpace: "nowrap" ,fontFamily: 'Inter'}}>2022</div>,
     value: 2022,
     color: "#32a871"
   },
   {
-    label: <div style={{ fontSize: 15,color: 'white', whiteSpace: "nowrap" }}>2023</div>,
+    label: <div style={{ fontSize: 15,color: 'white', whiteSpace: "nowrap" ,fontFamily: 'Inter'}}>2023</div>,
     value: 2023,
     color: "#32a871"
   }
@@ -29,7 +29,7 @@ Ion.defaultAccessToken ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzYjM5M2
 
 function App() {
 
-  const screenSize = useScreenSize();
+
   const emodnet_provider = new WebMapServiceImageryProvider({
     url : 'https://ows.emodnet-bathymetry.eu/wms',
     layers :  'mean_multicolour',
@@ -42,15 +42,20 @@ function App() {
     //  SO AS NOT TO RELY ON THE ONREADY EVENT OF THE FIRST THING TO BE RENDERED 
     // TO THE VIEWER FOLLOWING: https://resium.reearth.io/guide
     viewer._cesiumWidget._creditContainer.style.display = "none"
-    viewer.forceResize();
+    // viewer.forceResize();
     viewer.animation.container.style.visibility = "hidden"
     viewer.timeline.container.style.visibility = "hidden"
+    viewer._toolbar.style.visibility = "hidden"
     viewer.scene.enableCollisionDetection = false
-    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    console.log(viewer._fullscreenButton._container)
+    // viewer._cesiumWidget.hidden = true
+    // viewer.baseLayerPicker = false
+    // viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
     // dealing with actual tiles
      // viewer.extend(viewerCesium3DTilesInspectorMixin);
     tileset._root.transform[14] = tileset._root.transform[14] -13 ;
     tileset.description = "Survey Name : Ardmucknish Bay 2023"
+    
   };
 
   const handleReady_diver = tileset => {
@@ -109,7 +114,12 @@ function App() {
     setDateSliderContainerVis(true)
   }
 
+  const handleclickAnywhereHandler = (e) => {
+  var clickAnywhereHandler = new ScreenSpaceEventHandler(viewer.canvas);
 
+  clickAnywhereHandler.setInputAction(function(movement) {
+  console.log(movement.position); // position of click
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);}
   
 
   // define tileset marker positions     
@@ -121,16 +131,11 @@ function App() {
   let viewer;
 
   return (
-    <div>
-    <img src="./new_logo_draft.png" alt=" "  className="trito-logo"/>
-    <div className="map-container"
-    style={{position: 'fixed',
-            width: screenSize.width, 
-            height: '700px',
-            bottom: '0px',
-            left:'0px'}} >
+    <div >
+      
+    <div className="map-container">
 
-      <Viewer ref={e => {viewer = e && e.cesiumElement}}>
+      <Viewer full ref={e => {viewer = e && e.cesiumElement}}>
 
       <Scene>
 
@@ -196,15 +201,9 @@ function App() {
         className="date-slider"
         options={optionsPrimary}
         value={2023}
-        containerWidth={300}
+        containerWidth={200}
         callback={(currentValue) => setSliderYear(currentValue)}></CustomSwitcher>
         </div>}
-
-        <div className="bathy-checkBox">
-        <Checkbox/>
-        </div>
-
-      {isHovering && <div className="info-div"> {hoverBox} </div>}
 
 
 
@@ -212,6 +211,35 @@ function App() {
 
 
     </div>
+ 
+    <div className="nav-bar-top">
+    </div>
+
+    <img src="./new_logo_draft.png" alt=" "  className="trito-logo"/>
+    
+    <div className="logo-text">
+      Hydrophis
+    </div>
+
+    <div className="nav-bar-text">
+      <div>LOGIN</div> 
+      <div>CONTACT</div> 
+      <div>ABOUT</div>   
+    </div>
+
+    <div className="bathy-checkBox">
+        <Checkbox/>
+        </div>
+
+       
+
+    {isHovering && <div className="info-div"> </div>}
+    {isHovering && <div  className="info-div-text" >
+      <h2>Model Vital Stats</h2>
+       {hoverBox} </div> }
+
+   
+
     </div>
   );
 }
