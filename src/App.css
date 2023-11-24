@@ -62,6 +62,25 @@
   bottom:30%
 }
 
+
+.my-sliding-pane .slide-pane__title {
+  font-size: 18px;
+  font-weight: normal;
+  max-width: 80%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter'
+}
+
+
+
+.my-sliding-pane .slide-pane__content {
+  font-family: 'Inter'
+}
+
 .bathy-checkBox{
   position: absolute;
   bottom:50px;
