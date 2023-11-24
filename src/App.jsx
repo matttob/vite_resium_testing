@@ -5,6 +5,8 @@ import { Cartesian3, Color, viewerCesiumInspectorMixin ,viewerCesium3DTilesInspe
 import { Viewer,Scene, Entity , GeoJsonDataSource, KmlDataSource,CameraFlyTo, Cesium3DTileset, ScreenSpaceEventHandler,PointGraphics,EntityDescription ,BillboardGraphics,ImageryLayer,useCesium} from 'resium'
 import './App.css'
 import { CustomSwitcher } from 'react-custom-switcher'
+import SlidingPane from "react-sliding-pane";
+import "react-sliding-pane/dist/react-sliding-pane.css";
 
 
 const optionsPrimary = [
@@ -60,7 +62,7 @@ function App() {
 
   const handleReady_diver = tileset => {
     // crude way to modify vertical coordinate of model position
-    // tileset._root.transform[14] = tileset._root.transform[14] - 50 ;
+    tileset._root.transform[14] = tileset._root.transform[14] - 50 ;
     tileset.description = "Survey Name : Ardmucknish Bay 2022"
   };
 
@@ -69,20 +71,38 @@ function App() {
     tileset.description = "Survey Name : Creran"
   };
 
-  // Show text ox based on user hovering over tileset
+  // Show text on based on user hovering over tileset
   const [isHovering, setIsHovering] = useState(false)
   const [hoverBox, setHoverBox] = useState("")
 
   const handleHover = (e) => {
     setIsHovering(true)
-    setHoverBox((viewer.scene.pick(e.endPosition).content._tileset._url))
     setHoverBox((viewer.scene.pick(e.endPosition).content._tileset.description))
   }
 
   function handleNoHover() {
     setIsHovering(false)
   }
+
+
+
+
+ const [ModelStatsText, setModelStatsText] = useState("")
+
+  const [isInfo, setIsInfo] = useState({
+    isInfoPaneOpen: false,
+    isInfoPaneOpenLeft: false,
+  });
  
+  const handleModelRightClick = (e) => {
+    setIsInfo({ isPaneOpenLeft: true })
+    setModelStatsText((viewer.scene.pick(e.endPosition).content._tileset._url))
+    setModelStatsText((viewer.scene.pick(e.endPosition).content._tileset.description))
+    
+
+  }
+
+ console.log(ModelStatsText)
 //  check box for turning on or off image layer of bathymetry
 
  const [isChecked, setIsChecked] = useState(false)
@@ -153,16 +173,19 @@ function App() {
         // https://github.com/CesiumGS/3d-tiles-samples/blob/main/INSTRUCTIONS.md
         // url={" http://localhost:8003/tileset.json"} 
         onReady={handleReady_rov}
-        onMouseEnter={handleHover}
-        onMouseLeave={handleNoHover} 
+        // onMouseEnter={handleHover}
+        // onMouseLeave={handleNoHover}
+        onRightClick = {handleModelRightClick}
+        
+        
         show = {sliderYear == 2023?  true : false}
         />
         <Cesium3DTileset 
         id="crack_DIVER"
         url={IonResource.fromAssetId(2310560)} 
         onReady={handleReady_diver}
-        onMouseEnter={handleHover}
-        onMouseLeave={handleNoHover} 
+        // onMouseEnter={handleHover}
+        // onMouseLeave={handleNoHover} 
         show = {sliderYear == 2022?  true : false}
         /> 
          <GeoJsonDataSource data={"./22_Alcyionium.json"} 
@@ -180,8 +203,8 @@ function App() {
         url={IonResource.fromAssetId(2311985)} 
         // debugShowBoundingVolume = {true}
         // onReady={handleReady}
-        onMouseEnter={handleHover}
-        onMouseLeave={handleNoHover} 
+        // onMouseEnter={handleHover}
+        // onMouseLeave={handleNoHover} 
         onReady={handleReady_creran}
         /> 
         <Entity position={creran_position} name="Creran"
@@ -234,11 +257,21 @@ function App() {
        
 
     {isHovering && <div className="info-div"> </div>}
-    {isHovering && <div  className="info-div-text" >
-      <h2>Model Vital Stats</h2>
-       {hoverBox} </div> }
 
-   
+    {/* {isHovering && <div  className="info-div-text" >
+      <h2>Model Vital Stats</h2>
+       {hoverBox} </div> } */}
+
+       <SlidingPane className =  "my_sliding_pane"
+        // closeIcon={<div>Some div containing custom close icon.</div>}
+        isOpen={isInfo.isPaneOpenLeft}
+        title="Model Vital Stats"
+        from="left"
+        width="500px"
+        onRequestClose={() => setIsInfo({isPaneOpenLeft: false })}
+      >
+        <div  > {ModelStatsText} </div>
+      </SlidingPane>
 
     </div>
   );

@@ -51,7 +51,7 @@
 
 
 .nav-bar-text div {
-  width: 100px;
+  width: 150px;
   height: 100px;
 }
 
@@ -73,7 +73,7 @@
 
 .info-div{
   position: absolute;
-  width: 400px;
+  width: 600px;
   height: 200px;
   bottom: 300px;
   left: 0px;
@@ -86,7 +86,7 @@
   position: absolute;
   color: white;
   font-family: 'Inter';
-  width: 400px;
+  width: 600px;
   height: 300px;
   bottom: 200px;
   left: 50px;
