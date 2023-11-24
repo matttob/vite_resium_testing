@@ -61,7 +61,7 @@ function App() {
 
   const handleReady_diver = tileset => {
     // crude way to modify vertical coordinate of model position
-    tileset._root.transform[14] = tileset._root.transform[14] - 50 ;
+    tileset._root.transform[14] = tileset._root.transform[14] ;
     tileset.description = "Survey Name : Ardmucknish Bay 2022"
   };
 
