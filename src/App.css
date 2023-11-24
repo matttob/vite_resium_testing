@@ -3,7 +3,7 @@
 }
 
 .map-container{
-  position: absolute;
+  position: absolute; 
   height: 100vh;
   width: 100vw;
   bottom: 0%;
@@ -55,6 +55,12 @@
   height: 100px;
 }
 
+
+.my-sliding-pane{ 
+  position: absolute!important;
+  height: 200px!important;
+  bottom:30%
+}
 
 .bathy-checkBox{
   position: absolute;

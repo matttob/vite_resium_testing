@@ -49,7 +49,6 @@ function App() {
     viewer.timeline.container.style.visibility = "hidden"
     viewer._toolbar.style.visibility = "hidden"
     viewer.scene.enableCollisionDetection = false
-    console.log(viewer._fullscreenButton._container)
     // viewer._cesiumWidget.hidden = true
     // viewer.baseLayerPicker = false
     // viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -76,15 +75,13 @@ function App() {
   const [hoverBox, setHoverBox] = useState("")
 
   const handleHover = (e) => {
-    setIsHovering(true)
+    // setIsHovering(true)
     setHoverBox((viewer.scene.pick(e.endPosition).content._tileset.description))
   }
 
   function handleNoHover() {
     setIsHovering(false)
   }
-
-
 
 
  const [ModelStatsText, setModelStatsText] = useState("")
@@ -96,13 +93,13 @@ function App() {
  
   const handleModelRightClick = (e) => {
     setIsInfo({ isPaneOpenLeft: true })
-    setModelStatsText((viewer.scene.pick(e.endPosition).content._tileset._url))
-    setModelStatsText((viewer.scene.pick(e.endPosition).content._tileset.description))
+    // setModelStatsText((viewer.scene.pick(e.Position).content._tileset._url))
+    // setModelStatsText((viewer.scene.pick(e.endPosition).content._tileset.description))
     
 
   }
 
- console.log(ModelStatsText)
+
 //  check box for turning on or off image layer of bathymetry
 
  const [isChecked, setIsChecked] = useState(false)
@@ -173,19 +170,18 @@ function App() {
         // https://github.com/CesiumGS/3d-tiles-samples/blob/main/INSTRUCTIONS.md
         // url={" http://localhost:8003/tileset.json"} 
         onReady={handleReady_rov}
-        // onMouseEnter={handleHover}
-        // onMouseLeave={handleNoHover}
+        onMouseEnter={handleHover}
+        onMouseLeave={handleNoHover}
         onRightClick = {handleModelRightClick}
-        
-        
         show = {sliderYear == 2023?  true : false}
         />
         <Cesium3DTileset 
         id="crack_DIVER"
         url={IonResource.fromAssetId(2310560)} 
         onReady={handleReady_diver}
-        // onMouseEnter={handleHover}
-        // onMouseLeave={handleNoHover} 
+        onMouseEnter={handleHover}
+        onMouseLeave={handleNoHover} 
+        onRightClick = {handleModelRightClick}
         show = {sliderYear == 2022?  true : false}
         /> 
          <GeoJsonDataSource data={"./22_Alcyionium.json"} 
@@ -256,13 +252,13 @@ function App() {
 
        
 
-    {isHovering && <div className="info-div"> </div>}
+    {isHovering && <div className="info-div"> {hoverBox} </div>}
 
     {/* {isHovering && <div  className="info-div-text" >
       <h2>Model Vital Stats</h2>
        {hoverBox} </div> } */}
 
-       <SlidingPane className =  "my_sliding_pane"
+       <SlidingPane className =  "my-sliding-pane"
         // closeIcon={<div>Some div containing custom close icon.</div>}
         isOpen={isInfo.isPaneOpenLeft}
         title="Model Vital Stats"
@@ -270,7 +266,7 @@ function App() {
         width="500px"
         onRequestClose={() => setIsInfo({isPaneOpenLeft: false })}
       >
-        <div  > {ModelStatsText} </div>
+        <div  >{hoverBox}</div>
       </SlidingPane>
 
     </div>
