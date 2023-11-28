@@ -126,7 +126,6 @@ function App() {
   <div >
       
     <div className="map-container">
-
       <Viewer full ref={e => {viewer = e && e.cesiumElement}}>
         <Scene>
           <ImageryLayer
