@@ -40,15 +40,32 @@ const creran_position = Cartesian3.fromDegrees( -5.341055193857732, 56.519428356
 
 function App() {
 
+  const viewer_ref = useRef(null);
+
+  const [viewerReady, setViewerReady] = useState(false)
+
+ 
+  useEffect(() => {
+    setTimeout(() => {
+    if (viewer_ref.current && viewer_ref.current.cesiumElement) {
+        console.log(viewer_ref.current.cesiumElement)
+        viewer_ref.current.cesiumElement._cesiumWidget._creditContainer.style.display = "none"
+        viewer_ref.current.cesiumElement.animation.container.style.visibility = "hidden"
+        viewer_ref.current.cesiumElement.timeline.container.style.visibility = "hidden"
+        viewer_ref.current.cesiumElement._toolbar.style.visibility = "hidden"
+        viewer_ref.current.cesiumElement.scene.enableCollzisionDetection = false
+        setViewerReady(true)
+      }}, 1); }, []);
+
   const handleReady_rov = tileset => {
     // dealing with main viewer properties THIS NEEDS TO BE FIXED IN FUTURE
     //  SO AS NOT TO RELY ON THE ONREADY EVENT OF THE FIRST THING TO BE RENDERED 
     // TO THE VIEWER FOLLOWING: https://resium.reearth.io/guide
-    viewer._cesiumWidget._creditContainer.style.display = "none"
-    viewer.animation.container.style.visibility = "hidden"
-    viewer.timeline.container.style.visibility = "hidden"
-    viewer._toolbar.style.visibility = "hidden"
-    viewer.scene.enableCollzisionDetection = false
+    // viewer._cesiumWidget._creditContainer.style.display = "none"
+    // viewer.animation.container.style.visibility = "hidden"
+    // viewer.timeline.container.style.visibility = "hidden"
+    // viewer._toolbar.style.visibility = "hidden"
+    // viewer.scene.enableCollzisionDetection = false
     // dealing with tileset options
     // crude way to modify vertical coordinate of model position
     tileset._root.transform[14] = tileset._root.transform[14] -13 ;
@@ -119,14 +136,13 @@ function App() {
   }
 
 
-  // initiate cesium viewer variable
-  let viewer;
+
 
   return (
   <div >
       
-    <div className="map-container">
-      <Viewer full ref={e => {viewer = e && e.cesiumElement}}>
+    <div className="map-container" style={{visibility: viewerReady ? 'visible' : 'hidden' }}   >
+      <Viewer ref={viewer_ref} >
         <Scene>
           <ImageryLayer
             id = "bathy_imagery_layer"
