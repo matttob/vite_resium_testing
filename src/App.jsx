@@ -7,7 +7,7 @@ import './App.css'
 import { CustomSwitcher } from 'react-custom-switcher'
 import SlidingPane from "react-sliding-pane";
 import "react-sliding-pane/dist/react-sliding-pane.css";
-
+// test
 
 // Date slider options
 const CustomSwitcheroptionsPrimary = [
