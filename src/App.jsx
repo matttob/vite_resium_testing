@@ -92,7 +92,7 @@ function App() {
         viewer_ref.current.cesiumElement.scene.enableCollzisionDetection = false
         
         
-        const outerCoreRadius = 6300000;
+        const outerCoreRadius = 3300000;
         const outerCore = viewer_ref.current.cesiumElement.entities.add({
           name: "Outer Core",
           position: Cartesian3.ZERO,
