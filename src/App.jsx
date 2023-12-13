@@ -39,9 +39,9 @@ const emodnet_provider = new WebMapServiceImageryProvider({
 const ard_position = Cartesian3.fromDegrees( -5.43545876445209,  56.45732764483844, 0);
 const creran_position = Cartesian3.fromDegrees( -5.341055193857732, 56.51942835664191, 10);
 
-const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
-  token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
-});
+// const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
+//   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
+// });
 
   
 function App() {
