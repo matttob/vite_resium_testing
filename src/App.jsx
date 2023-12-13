@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef,FC} from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-import { Cartesian3, Color, viewerCesiumInspectorMixin ,viewerCesium3DTilesInspectorMixin, IonResource, Ion, WebMapServiceImageryProvider, DefaultProxy, WebMapTileServiceImageryProvider, Credit,TextureMinificationFilter, TextureMagnificationFilter} from 'cesium'
+import { ArcGISTiledElevationTerrainProvider,CesiumTerrainProvider,HeadingPitchRoll,Matrix4,Transforms, Cartesian3, Color, viewerCesiumInspectorMixin ,viewerCesium3DTilesInspectorMixin, IonResource, Ion, WebMapServiceImageryProvider, DefaultProxy, WebMapTileServiceImageryProvider, Credit,TextureMinificationFilter, TextureMagnificationFilter} from 'cesium'
 import { Viewer,Scene, Entity , GeoJsonDataSource, KmlDataSource,CameraFlyTo, Cesium3DTileset, ScreenSpaceEventHandler,PointGraphics,EntityDescription ,BillboardGraphics,ImageryLayer,useCesium} from 'resium'
 import './App.css'
 import { CustomSwitcher } from 'react-custom-switcher'
 import SlidingPane from "react-sliding-pane";
 import "react-sliding-pane/dist/react-sliding-pane.css";
-// test
+
+
 
 // Date slider options
 const CustomSwitcheroptionsPrimary = [
@@ -33,48 +34,131 @@ const emodnet_provider = new WebMapServiceImageryProvider({
   minimumLevel: '0',
 });
 
+
 // define tileset entity marker positions   currently hard wired but clearly need to be derived from tileset data
 const ard_position = Cartesian3.fromDegrees( -5.43545876445209,  56.45732764483844, 0);
 const creran_position = Cartesian3.fromDegrees( -5.341055193857732, 56.51942835664191, 10);
 
+const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
+  token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
+});
 
+  
 function App() {
+
 
   const viewer_ref = useRef(null);
 
   const [viewerReady, setViewerReady] = useState(false)
+  
 
- 
+  function computeTransform(latitude, longitude, height) {
+    var offset = height;
+    var cartesianOffset = Cartesian3.fromDegrees(longitude, latitude, offset);
+    return Transforms.headingPitchRollToFixedFrame(cartesianOffset, new HeadingPitchRoll());
+}
+
+
+
+// Add custom terrain
+  // const terrainProvider = new CesiumTerrainProvider({
+  //       url:" http://localhost:8003/tileset.json"
+  //     });
+  
   useEffect(() => {
     setTimeout(() => {
     if (viewer_ref.current && viewer_ref.current.cesiumElement) {
-        console.log(viewer_ref.current.cesiumElement)
         viewer_ref.current.cesiumElement._cesiumWidget._creditContainer.style.display = "none"
         viewer_ref.current.cesiumElement.animation.container.style.visibility = "hidden"
         viewer_ref.current.cesiumElement.timeline.container.style.visibility = "hidden"
-        viewer_ref.current.cesiumElement._toolbar.style.visibility = "hidden"
+        // viewer_ref.current.cesiumElement._toolbar.style.visibility = "hidden"
+        // viewer_ref.current.cesiumElement.scene.terrainProvider = terrainProvider
+
+
+        
+        const globe = viewer_ref.current.cesiumElement.scene.globe;
+        const baseLayer = viewer_ref.current.cesiumElement.scene.imageryLayers.get(0);
+
+        
+        globe.showGroundAtmosphere = false;
+        globe.baseColor = Color.TRANSPARENT;
+        globe.translucency.enabled = true;
+        globe.undergroundColor = undefined;
+      
+        // Set oceans on Bing base layer to transparent
+        baseLayer.colorToAlpha = new Color(0.0, 0.016, 0.059);
+        baseLayer.colorToAlphaThreshold = 0.2;
+        // baseLayer.colorToAlphaThreshold = 0.2;
         viewer_ref.current.cesiumElement.scene.enableCollzisionDetection = false
+        
+        
+        const outerCoreRadius = 6300000;
+        const outerCore = viewer_ref.current.cesiumElement.entities.add({
+          name: "Outer Core",
+          position: Cartesian3.ZERO,
+          ellipsoid: {
+            radii: new Cartesian3(
+              outerCoreRadius,
+              outerCoreRadius,
+              outerCoreRadius
+            ),
+            material: Color.GREY,
+          },
+        });
+
+
+
+
         setViewerReady(true)
       }}, 1); }, []);
 
+
+
   const handleReady_rov = tileset => {
-    // dealing with main viewer properties THIS NEEDS TO BE FIXED IN FUTURE
-    //  SO AS NOT TO RELY ON THE ONREADY EVENT OF THE FIRST THING TO BE RENDERED 
-    // TO THE VIEWER FOLLOWING: https://resium.reearth.io/guide
-    // viewer._cesiumWidget._creditContainer.style.display = "none"
-    // viewer.animation.container.style.visibility = "hidden"
-    // viewer.timeline.container.style.visibility = "hidden"
-    // viewer._toolbar.style.visibility = "hidden"
-    // viewer.scene.enableCollzisionDetection = false
-    // dealing with tileset options
-    // crude way to modify vertical coordinate of model position
-    tileset._root.transform[14] = tileset._root.transform[14] -13 ;
-    tileset.description = "Survey Name : Ardmucknish Bay 2023"
+
+   
+    // tileset._root.transform[14] = 0 ;
+    var position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
+    var cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
+
+    
+       // Position the tileset
+       var longitude = -5.43545876445209;  
+       var latitude = 56.45732764483844;
+       var height = -15;
+       tileset._root.transform = Matrix4.IDENTITY;
+       tileset._root.transform = computeTransform(latitude, longitude, height); // or set tileset._root.transform directly
+      position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
+      cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
+  
+    // tileset.description = "Survey Name : Ardmucknish Bay 2023"
+    //     //  let c3d_layers
+    //     //  c3d_layers = viewer_ref.current.cesiumElement.scene.primitives._primitives.filter(pr => pr.constructor.name=='Cesium3DTileset')
+    //     //  console.log(c3d_layers[0]._root._header.transform)
+
+
+    //      var heightOffset = 20.0;
+    //      var boundingSphere = tileset.boundingSphere;
+    //      var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
+    //      var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
+    //       console.log(surface)
+    //      var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, heightOffset);
+    //      var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
+    //      tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
+        //  viewer_ref.current.cesiumElement.scene.clampToHeightMostDetailed(c3d_layers[0]._root._header.boundingVolume)
   };
+
+  // const handleReady_rov_local = tileset => {
+  //   tileset._root.transform[14] = tileset._root.transform[14] +10;
+  //   tileset.description = "Survey Name : Ardmucknish Bay 2023"
+  // };
+
 
   const handleReady_diver = tileset => {
     tileset._root.transform[14] = tileset._root.transform[14] ;
     tileset.description = "Survey Name : Ardmucknish Bay 2022"
+
   };
 
   const handleReady_creran = tileset => {
@@ -82,26 +166,31 @@ function App() {
     tileset.description = "Survey Name : Creran"
   };
 
-  // use hover as way to get tileset deatils to use right click info pane display div as cant get right click event to reference tileset
   const [isHovering, setIsHovering] = useState(false)
-  const [hoverBox, setHoverBox] = useState("")
-  const handleHover = (e) => {
+  const handleHover = (mousePosIn) => {  
     setIsHovering(true)
-    setHoverBox((viewer.scene.pick(e.endPosition).content._tileset.description))
+
   }
+
   function handleNoHover() {
     setIsHovering(false)
   }
 
   // control info slide out pane
+  const [InfoText, setInfoText] = useState("")
+
   const [isInfo, setIsInfo] = useState({
     isInfoPaneOpen: false,
     isInfoPaneOpenLeft: false,
   });
-  const handleModelRightClick = (e) => {
-    setIsInfo({ isPaneOpenLeft: true })
-  }
 
+
+  const handleModelRightClick = (mousePosIn) => {  
+    setInfoText((viewer_ref.current.cesiumElement.scene.pick(mousePosIn.position).content._tileset.description))
+    setIsInfo({ isPaneOpenLeft: true })
+    // console.log(viewer_ref.current.cesiumElement.scene.pick(mousePosIn.position).content._tileset._root.transform)
+
+  };
 
 //  check box for turning on or off bathymetry image layer 
  const [isChecked, setIsChecked] = useState(false)
@@ -123,7 +212,7 @@ function App() {
   
 
   // date slider state
-  const [sliderYear, setSliderYear] = useState([2023])
+  const [sliderYear, setSliderYear] = useState([])
   const [dateSliderContainerVis, setDateSliderContainerVis] = useState(false)
   // crude way to link date slider to tileset. Currently on for a single survey (2 tile sets ) and off for another
    // date slider on
@@ -136,13 +225,11 @@ function App() {
   }
 
 
-
-
   return (
   <div >
       
     <div className="map-container" style={{visibility: viewerReady ? 'visible' : 'hidden' }}   >
-      <Viewer ref={viewer_ref} >
+      <Viewer ref={viewer_ref}>
         <Scene>
           <ImageryLayer
             id = "bathy_imagery_layer"
@@ -155,11 +242,20 @@ function App() {
             onClick = {handleArdBayClick}>
             <BillboardGraphics image="./alcyonium_digitatum_icon_red.png" scale={0.02} />
           </Entity>
-          <Cesium3DTileset 
+          {/* <Cesium3DTileset 
+            id="crack_ROV_local"
+            // below is syntax for loading tiles from local storage instead of cesium ion following:  // https://github.com/CesiumGS/3d-tiles-samples/blob/main/INSTRUCTIONS.md
+            url={" http://localhost:8003/tileset.json"} 
+            onReady={handleReady_rov_local}
+            onMouseEnter={handleHover}
+            onMouseLeave={handleNoHover}
+            onRightClick = {handleModelRightClick}
+            show = {sliderYear == 2023?  true : false}
+          /> */}
+            <Cesium3DTileset 
             id="crack_ROV"
             url={IonResource.fromAssetId(2300148)} 
             // below is syntax for loading tiles from local storage instead of cesium ion following: 
-            // https://github.com/CesiumGS/3d-tiles-samples/blob/main/INSTRUCTIONS.md
             // url={" http://localhost:8003/tileset.json"} 
             onReady={handleReady_rov}
             onMouseEnter={handleHover}
@@ -201,7 +297,7 @@ function App() {
       <CustomSwitcher
         className="date-slider"
         options={CustomSwitcheroptionsPrimary}
-        value={2023}
+          // value={2023}
         containerWidth={200}
         callback={(currentValue) => setSliderYear(currentValue)}> 
       </CustomSwitcher>
@@ -209,7 +305,7 @@ function App() {
 
     </div>
  
-    <div className="nav-bar-top">
+    {/* <div className="nav-bar-top">
     </div>
 
     <img src="./new_logo_draft.png" alt=" "  className="trito-logo"/>
@@ -222,7 +318,7 @@ function App() {
       <div>LOGIN</div> 
       <div>CONTACT</div> 
       <div>ABOUT</div>   
-    </div>
+    </div> */}
 
     <div className="bathy-checkBox">
         <Checkbox/>
@@ -235,7 +331,7 @@ function App() {
       from="left"
       width="500px"
       onRequestClose={() => setIsInfo({isPaneOpenLeft: false })}>
-      <div  >{hoverBox}</div>
+      <div  >{InfoText}</div>
     </SlidingPane>
 
 </div>
@@ -243,12 +339,6 @@ function App() {
 }
 
 export default App;
-
-
- 
-
-        
-
 
 
 
