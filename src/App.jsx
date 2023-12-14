@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef,FC} from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-import { ArcGISTiledElevationTerrainProvider,CesiumTerrainProvider,HeadingPitchRoll,Matrix4,Transforms, Cartesian3, Color, viewerCesiumInspectorMixin ,viewerCesium3DTilesInspectorMixin, IonResource, Ion, WebMapServiceImageryProvider, DefaultProxy, WebMapTileServiceImageryProvider, Credit,TextureMinificationFilter, TextureMagnificationFilter} from 'cesium'
+import { Rectangle,ArcGISTiledElevationTerrainProvider,CesiumTerrainProvider,HeadingPitchRoll,Matrix4,Transforms, Cartesian3, Color, viewerCesiumInspectorMixin ,viewerCesium3DTilesInspectorMixin, IonResource, Ion, WebMapServiceImageryProvider, DefaultProxy, WebMapTileServiceImageryProvider, Credit,TextureMinificationFilter, TextureMagnificationFilter} from 'cesium'
 import { Viewer,Scene, Entity , GeoJsonDataSource, KmlDataSource,CameraFlyTo, Cesium3DTileset, ScreenSpaceEventHandler,PointGraphics,EntityDescription ,BillboardGraphics,ImageryLayer,useCesium} from 'resium'
 import './App.css'
 import { CustomSwitcher } from 'react-custom-switcher'
 import SlidingPane from "react-sliding-pane";
 import "react-sliding-pane/dist/react-sliding-pane.css";
 
-
+var transparent_ocean = false
 
 // Date slider options
 const CustomSwitcheroptionsPrimary = [
@@ -61,7 +61,7 @@ function App() {
 
 
 // Add custom terrain
-  // const terrainProvider = new CesiumTerrainProvider({
+  // const customTerrainProvider = new CesiumTerrainProvider({
   //       url:" http://localhost:8003/tileset.json"
   //     });
   
@@ -71,28 +71,13 @@ function App() {
         viewer_ref.current.cesiumElement._cesiumWidget._creditContainer.style.display = "none"
         viewer_ref.current.cesiumElement.animation.container.style.visibility = "hidden"
         viewer_ref.current.cesiumElement.timeline.container.style.visibility = "hidden"
-        // viewer_ref.current.cesiumElement._toolbar.style.visibility = "hidden"
-        // viewer_ref.current.cesiumElement.scene.terrainProvider = terrainProvider
+        viewer_ref.current.cesiumElement._toolbar.style.visibility = "hidden"
 
+        // add custom terrain
+        // viewer_ref.current.cesiumElement.scene.terrainProvider = customTerrainProvider
 
-        
-        const globe = viewer_ref.current.cesiumElement.scene.globe;
-        const baseLayer = viewer_ref.current.cesiumElement.scene.imageryLayers.get(0);
-
-        
-        globe.showGroundAtmosphere = false;
-        globe.baseColor = Color.TRANSPARENT;
-        globe.translucency.enabled = true;
-        globe.undergroundColor = undefined;
-      
-        // Set oceans on Bing base layer to transparent
-        baseLayer.colorToAlpha = new Color(0.0, 0.016, 0.059);
-        baseLayer.colorToAlphaThreshold = 0.2;
-        // baseLayer.colorToAlphaThreshold = 0.2;
-        viewer_ref.current.cesiumElement.scene.enableCollzisionDetection = false
-        
-        
-        const outerCoreRadius = 3300000;
+        // create core globe sphere
+        const outerCoreRadius = 6350000.0;
         const outerCore = viewer_ref.current.cesiumElement.entities.add({
           name: "Outer Core",
           position: Cartesian3.ZERO,
@@ -105,16 +90,27 @@ function App() {
             material: Color.GREY,
           },
         });
+      
+        // Set oceans on Bing base layer to transparent
+        if (transparent_ocean) {
+        const globe = viewer_ref.current.cesiumElement.scene.globe;
+        const baseLayer = viewer_ref.current.cesiumElement.scene.imageryLayers.get(0);
+        globe.showGroundAtmosphere = false;
+        globe.baseColor = Color.TRANSPARENT;
+        globe.translucency.enabled = true;
+        globe.undergroundColor = undefined;
+        baseLayer.colorToAlpha = new Color(0.0, 0.016, 0.059);
+        baseLayer.colorToAlphaThreshold = 0.2;}
 
-
-
-
+      // finally show viewer when it has been available to ref  
         setViewerReady(true)
       }}, 1); }, []);
 
 
 
   const handleReady_rov = tileset => {
+     // tileset.description = "Survey Name : Ardmucknish Bay 2023"
+
 
    
     // tileset._root.transform[14] = 0 ;
@@ -123,15 +119,45 @@ function App() {
 
     
        // Position the tileset
-       var longitude = -5.43545876445209;  
-       var latitude = 56.45732764483844;
-       var height = -15;
+       var tile_longitude = -5.43545876445209;  
+       var tile_latitude = 56.45732764483844;
+       var height = -30;
        tileset._root.transform = Matrix4.IDENTITY;
-       tileset._root.transform = computeTransform(latitude, longitude, height); // or set tileset._root.transform directly
+       tileset._root.transform = computeTransform(tile_latitude, tile_longitude, height); // or set tileset._root.transform directly
       position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
       cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
+
+
+
+      const globe = viewer_ref.current.cesiumElement.scene.globe;
+      const baseLayer = viewer_ref.current.cesiumElement.scene.imageryLayers.get(0);
+
+      
+      viewer_ref.current.cesiumElement.scene.screenSpaceCameraController.enableCollisionDetection = false;
+      
+      // globe.showGroundAtmosphere = true;
+      // globe.baseColor = Color.BLUE;
+      // globe.translucency.enabled = false;
+      // globe.translucency.frontFaceAlpha = 1.0;
+      // globe.undergroundColor = Color.BLACK;
+      // globe.translucency.rectangle = undefined;
+      // baseLayer.colorToAlpha = undefined;
   
-    // tileset.description = "Survey Name : Ardmucknish Bay 2023"
+      // globe.translucency.enabled = true;
+      // globe.undergroundColor = undefined;
+      // globe.translucency.frontFaceAlpha = 0;
+      // console.log(globe.translucency)
+
+      // globe.translucency.rectangle =  Rectangle.fromDegrees(
+      //   tile_longitude-0.001,
+      //   tile_latitude-0.001,
+      //   tile_longitude+0.001,
+      //   tile_latitude+0.001
+      // );
+
+     
+   
+   
     //     //  let c3d_layers
     //     //  c3d_layers = viewer_ref.current.cesiumElement.scene.primitives._primitives.filter(pr => pr.constructor.name=='Cesium3DTileset')
     //     //  console.log(c3d_layers[0]._root._header.transform)
