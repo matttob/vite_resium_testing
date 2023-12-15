@@ -9,6 +9,7 @@ import SlidingPane from "react-sliding-pane";
 import "react-sliding-pane/dist/react-sliding-pane.css";
 
 var transparent_ocean = false
+var transparent_square = true
 
 // Date slider options
 const CustomSwitcheroptionsPrimary = [
@@ -77,7 +78,7 @@ function App() {
         // viewer_ref.current.cesiumElement.scene.terrainProvider = customTerrainProvider
 
         // create core globe sphere
-        const outerCoreRadius = 6350000.0;
+        const outerCoreRadius = 6320000.0;
         const outerCore = viewer_ref.current.cesiumElement.entities.add({
           name: "Outer Core",
           position: Cartesian3.ZERO,
@@ -87,7 +88,7 @@ function App() {
               outerCoreRadius,
               outerCoreRadius
             ),
-            material: Color.GREY,
+            material: Color.BLACK,
           },
         });
       
@@ -109,13 +110,13 @@ function App() {
 
 
   const handleReady_rov = tileset => {
-     // tileset.description = "Survey Name : Ardmucknish Bay 2023"
+     tileset.description = "Survey Name : Ardmucknish Bay 2023"
 
 
    
-    // tileset._root.transform[14] = 0 ;
-    var position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
-    var cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
+        // tileset._root.transform[14] = 0 ;
+      var position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
+      var cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
 
     
        // Position the tileset
@@ -128,32 +129,29 @@ function App() {
       cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
 
 
-
+      if (transparent_square) {
+      console.log('test')
       const globe = viewer_ref.current.cesiumElement.scene.globe;
       const baseLayer = viewer_ref.current.cesiumElement.scene.imageryLayers.get(0);
 
-      
-      viewer_ref.current.cesiumElement.scene.screenSpaceCameraController.enableCollisionDetection = false;
-      
-      // globe.showGroundAtmosphere = true;
-      // globe.baseColor = Color.BLUE;
-      // globe.translucency.enabled = false;
-      // globe.translucency.frontFaceAlpha = 1.0;
-      // globe.undergroundColor = Color.BLACK;
-      // globe.translucency.rectangle = undefined;
-      // baseLayer.colorToAlpha = undefined;
-  
-      // globe.translucency.enabled = true;
-      // globe.undergroundColor = undefined;
-      // globe.translucency.frontFaceAlpha = 0;
-      // console.log(globe.translucency)
+      globe.showGroundAtmosphere = true;
+      globe.baseColor = Color.BLUE;
+      globe.translucency.enabled = false;
+      globe.translucency.frontFaceAlpha = 1.0;
+      globe.undergroundColor = Color.BLACK;
+      globe.translucency.rectangle = undefined;
+      baseLayer.colorToAlpha = undefined;
+      globe.translucency.enabled = true;
+      globe.undergroundColor = undefined;
+      globe.translucency.frontFaceAlpha = 0.25;
+     
 
-      // globe.translucency.rectangle =  Rectangle.fromDegrees(
-      //   tile_longitude-0.001,
-      //   tile_latitude-0.001,
-      //   tile_longitude+0.001,
-      //   tile_latitude+0.001
-      // );
+      globe.translucency.rectangle =  Rectangle.fromDegrees(
+        tile_longitude-0.0005,
+        tile_latitude-0.0005,
+        tile_longitude+0.0005,
+        tile_latitude+0.0005
+      );}
 
      
    
@@ -184,6 +182,19 @@ function App() {
   const handleReady_diver = tileset => {
     tileset._root.transform[14] = tileset._root.transform[14] ;
     tileset.description = "Survey Name : Ardmucknish Bay 2022"
+            // tileset._root.transform[14] = 0 ;
+            var position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
+            var cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
+      
+          
+             // Position the tileset
+             var tile_longitude = -5.43545876445209;  
+             var tile_latitude = 56.45732764483844;
+             var height = -30;
+             tileset._root.transform = Matrix4.IDENTITY;
+             tileset._root.transform = computeTransform(tile_latitude, tile_longitude, height); // or set tileset._root.transform directly
+            position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
+            cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
 
   };
 
@@ -298,9 +309,9 @@ function App() {
             onRightClick = {handleModelRightClick}
             show = {sliderYear == 2022?  true : false}
           /> 
-          <GeoJsonDataSource data={"./22_Alcyionium.json"} 
+          {/* <GeoJsonDataSource data={"./22_Alcyionium.json"} 
             show = {sliderYear == 2022?  true : false}
-          />
+          /> */}
           <Entity position={creran_position} name="Creran"
             onClick = {handleCreranClick}>
             <BillboardGraphics image="./serp_icon_red.png" scale={0.02} />
