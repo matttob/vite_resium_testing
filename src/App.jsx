@@ -342,7 +342,7 @@ function App() {
 
     </div>
  
-    {/* <div className="nav-bar-top">
+    <div className="nav-bar-top">
     </div>
 
     <img src="./new_logo_draft.png" alt=" "  className="trito-logo"/>
@@ -355,7 +355,7 @@ function App() {
       <div>LOGIN</div> 
       <div>CONTACT</div> 
       <div>ABOUT</div>   
-    </div> */}
+    </div>
 
     <div className="bathy-checkBox">
         <Checkbox/>
