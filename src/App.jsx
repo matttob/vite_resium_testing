@@ -7,6 +7,9 @@ import './App.css'
 import { CustomSwitcher } from 'react-custom-switcher'
 import SlidingPane from "react-sliding-pane";
 import "react-sliding-pane/dist/react-sliding-pane.css";
+import tileset_ids from "./tileset_ids.js"
+
+
 
 var transparent_ocean = false
 var transparent_square = true
@@ -44,9 +47,24 @@ const creran_position = Cartesian3.fromDegrees( -5.341055193857732, 56.519428356
 //   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
 // });
 
-  
+
+
+
+
+
+
+
+
+
+
+
+
 function App() {
 
+
+
+
+    
 
   const viewer_ref = useRef(null);
 
@@ -195,7 +213,7 @@ function App() {
              tileset._root.transform = computeTransform(tile_latitude, tile_longitude, height); // or set tileset._root.transform directly
             position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
             cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
-
+            console.log('test');
   };
 
   const handleReady_creran = tileset => {
@@ -225,7 +243,6 @@ function App() {
   const handleModelRightClick = (mousePosIn) => {  
     setInfoText((viewer_ref.current.cesiumElement.scene.pick(mousePosIn.position).content._tileset.description))
     setIsInfo({ isPaneOpenLeft: true })
-    // console.log(viewer_ref.current.cesiumElement.scene.pick(mousePosIn.position).content._tileset._root.transform)
 
   };
 
@@ -262,6 +279,18 @@ function App() {
   }
 
 
+  const tileSetElements = tileset_ids.map(tileset => {
+    return <Cesium3DTileset 
+    id={tileset.id}
+    url={IonResource.fromAssetId(tileset.IonResourceId)} 
+    onReady={eval(tileset.onReady)}
+    onMouseEnter={handleHover}
+    onMouseLeave={handleNoHover}
+    onRightClick = {handleModelRightClick}
+    show = {sliderYear == tileset.year?  true : false}
+    />
+  })
+
   return (
   <div >
       
@@ -279,6 +308,8 @@ function App() {
             onClick = {handleArdBayClick}>
             <BillboardGraphics image="./alcyonium_digitatum_icon_red.png" scale={0.02} />
           </Entity>
+          {/* <GeoJsonDataSource data={"./22_Alcyionium.json"}  */}
+             show = {sliderYear == 2022?  true : false}/>
           {/* <Cesium3DTileset 
             id="crack_ROV_local"
             // below is syntax for loading tiles from local storage instead of cesium ion following:  // https://github.com/CesiumGS/3d-tiles-samples/blob/main/INSTRUCTIONS.md
@@ -289,30 +320,11 @@ function App() {
             onRightClick = {handleModelRightClick}
             show = {sliderYear == 2023?  true : false}
           /> */}
-            <Cesium3DTileset 
-            id="crack_ROV"
-            url={IonResource.fromAssetId(2300148)} 
-            // below is syntax for loading tiles from local storage instead of cesium ion following: 
-            // url={" http://localhost:8003/tileset.json"} 
-            onReady={handleReady_rov}
-            onMouseEnter={handleHover}
-            onMouseLeave={handleNoHover}
-            onRightClick = {handleModelRightClick}
-            show = {sliderYear == 2023?  true : false}
-          />
-          <Cesium3DTileset 
-            id="crack_DIVER"
-            url={IonResource.fromAssetId(2310560)} 
-            onReady={handleReady_diver}
-            onMouseEnter={handleHover}
-            onMouseLeave={handleNoHover} 
-            onRightClick = {handleModelRightClick}
-            show = {sliderYear == 2022?  true : false}
-          /> 
-          {/* <GeoJsonDataSource data={"./22_Alcyionium.json"} 
-            show = {sliderYear == 2022?  true : false}
-          /> */}
-          <Entity position={creran_position} name="Creran"
+
+          {tileSetElements}
+
+
+          {/* <Entity position={creran_position} name="Creran"
             onClick = {handleCreranClick}>
             <BillboardGraphics image="./serp_icon_red.png" scale={0.02} />
             <EntityDescription>
@@ -326,7 +338,7 @@ function App() {
             onMouseEnter={handleHover}
             onMouseLeave={handleNoHover} 
             onReady={handleReady_creran}
-          /> 
+          />  */}
         </Scene>
       </Viewer>
 
