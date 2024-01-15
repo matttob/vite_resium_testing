@@ -1,18 +1,36 @@
-import { useState, useEffect, useRef,FC} from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+
+
+import { useState, useEffect, useRef} from 'react'
+
 import { Rectangle,ArcGISTiledElevationTerrainProvider,CesiumTerrainProvider,HeadingPitchRoll,Matrix4,Transforms, Cartesian3, Color, viewerCesiumInspectorMixin ,viewerCesium3DTilesInspectorMixin, IonResource, Ion, WebMapServiceImageryProvider, DefaultProxy, WebMapTileServiceImageryProvider, Credit,TextureMinificationFilter, TextureMagnificationFilter} from 'cesium'
 import { Viewer,Scene, Entity , GeoJsonDataSource, KmlDataSource,CameraFlyTo, Cesium3DTileset, ScreenSpaceEventHandler,PointGraphics,EntityDescription ,BillboardGraphics,ImageryLayer,useCesium} from 'resium'
 import './App.css'
 import { CustomSwitcher } from 'react-custom-switcher'
 import SlidingPane from "react-sliding-pane";
 import "react-sliding-pane/dist/react-sliding-pane.css";
-import tileset_ids from "./tileset_ids.js"
+import tileset_ids from "./s3_tile_ids.js"
+import * as turf from '@turf/turf'
 
 
+// // Deal with test geojson file
+async function geoJsonTranslateHeight(geoJsonPath,heightAdjust) {
+  var info = await fetch(geoJsonPath)
+  .then(res => {
+  return res.json();
+  }).then(data => {
+  return data;
+  });
+  return turf.transformTranslate(info, 0, 0, { zTranslation: heightAdjust});
+}
 
 var transparent_ocean = false
 var transparent_square = true
+// apply depth offset to gejoson data
+// const depthTranslatedGeoData = turf.transformTranslate(require( "./22_Alcyionium.json"), 0, 0, { zTranslation: -67 });
+// console.log(depthTranslatedGeoData.features[0].geometry.coordinates[0][0][2]);
+
+
+var tileMarkerPositions =[]
 
 // Date slider options
 const CustomSwitcheroptionsPrimary = [
@@ -28,7 +46,7 @@ const CustomSwitcheroptionsPrimary = [
   }];
 
 //Cesium ion api access token
-Ion.defaultAccessToken ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzYjM5M2JiYy03ODhiLTQ2YmUtODhkNC0yNTdlZTQ2Y2RkOGMiLCJpZCI6MTU4OTgxLCJpYXQiOjE2OTY0MzgyNjJ9.4DRtmcWO-nxpnuMP8hNoq8AYgyy3ZQYYfxuZQ_p0W1w";
+// Ion.defaultAccessToken ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzYjM5M2JiYy03ODhiLTQ2YmUtODhkNC0yNTdlZTQ2Y2RkOGMiLCJpZCI6MTU4OTgxLCJpYXQiOjE2OTY0MzgyNjJ9.4DRtmcWO-nxpnuMP8hNoq8AYgyy3ZQYYfxuZQ_p0W1w";
 
 // Bathymetry image provider details
 const emodnet_provider = new WebMapServiceImageryProvider({
@@ -48,23 +66,7 @@ const creran_position = Cartesian3.fromDegrees( -5.341055193857732, 56.519428356
 // });
 
 
-
-
-
-
-
-
-
-
-
-
-
 function App() {
-
-
-
-
-    
 
   const viewer_ref = useRef(null);
 
@@ -91,6 +93,10 @@ function App() {
         viewer_ref.current.cesiumElement.animation.container.style.visibility = "hidden"
         viewer_ref.current.cesiumElement.timeline.container.style.visibility = "hidden"
         viewer_ref.current.cesiumElement._toolbar.style.visibility = "hidden"
+
+
+        viewer_ref.current.cesiumElement.scene.backgroundColor = Color.BLACK.clone();
+        viewer_ref.current.cesiumElement.scene.screenSpaceCameraController.enableCollisionDetection = false;
 
         // add custom terrain
         // viewer_ref.current.cesiumElement.scene.terrainProvider = customTerrainProvider
@@ -121,37 +127,43 @@ function App() {
         baseLayer.colorToAlpha = new Color(0.0, 0.016, 0.059);
         baseLayer.colorToAlphaThreshold = 0.2;}
 
+
+     
+        // viewer_ref.current.cesiumElement.scene.screenSpaceCameraController.minimumZoomDistance = -300
+      
+
       // finally show viewer when it has been available to ref  
         setViewerReady(true)
       }}, 1); }, []);
 
+  const geoJsonReady = geo => {
 
+  }
 
-  const handleReady_rov = tileset => {
-     tileset.description = "Survey Name : Ardmucknish Bay 2023"
+      
+ const [tileMarkerAtt, setTileMarkerAtt] = useState([])
 
-
-   
-        // tileset._root.transform[14] = 0 ;
+  const handleReady_tileset = tileset => {
+    
+    // match featureIdlabel from tileset to that of tileset object array in order to be able to apply tileset specfic attirbutes
+    var verticalOffset
+    const tileSetDetails = tileset_ids.map(tiles => {
+      if (Object.values(tiles).includes(tileset.featureIdLabel)  ) {
+        verticalOffset = -1*tiles.verticalOffset}
+      })
+    
+      // Position the tileset
       var position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
       var cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
-
-    
-       // Position the tileset
-       var tile_longitude = -5.43545876445209;  
-       var tile_latitude = 56.45732764483844;
-       var height = -30;
-       tileset._root.transform = Matrix4.IDENTITY;
-       tileset._root.transform = computeTransform(tile_latitude, tile_longitude, height); // or set tileset._root.transform directly
+      tileset._root.transform = Matrix4.IDENTITY;
+      tileset._root.transform = computeTransform(cartographicPosition.latitude/ Math.PI * 180, cartographicPosition.longitude/ Math.PI * 180, verticalOffset); // or set tileset._root.transform directly
       position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
       cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
 
-
+      // create transparent square above tileset
       if (transparent_square) {
-      console.log('test')
       const globe = viewer_ref.current.cesiumElement.scene.globe;
       const baseLayer = viewer_ref.current.cesiumElement.scene.imageryLayers.get(0);
-
       globe.showGroundAtmosphere = true;
       globe.baseColor = Color.BLUE;
       globe.translucency.enabled = false;
@@ -162,23 +174,40 @@ function App() {
       globe.translucency.enabled = true;
       globe.undergroundColor = undefined;
       globe.translucency.frontFaceAlpha = 0.25;
-     
-
       globe.translucency.rectangle =  Rectangle.fromDegrees(
-        tile_longitude-0.0005,
-        tile_latitude-0.0005,
-        tile_longitude+0.0005,
-        tile_latitude+0.0005
-      );}
-
-     
+        (cartographicPosition.longitude/ Math.PI * 180)-10,
+      (cartographicPosition.latitude/ Math.PI * 180)-10,
+        (cartographicPosition.longitude/ Math.PI * 180)+10,
+        (cartographicPosition.latitude/ Math.PI * 180)+10)
    
-   
+   }
+     // add attributes to marker array
+      var pos = {}
+      const tileSetPosition = tileset_ids.map(tiles => {
+    
+        if (Object.values(tiles).includes(tileset.featureIdLabel)  ) {
+        pos = {"name":tiles.name,
+                    "cartoPosition" : position,
+                    "longitude" : (cartographicPosition.longitude/ Math.PI * 180),
+                    "latitude" : (cartographicPosition.latitude/ Math.PI * 180),
+                    "markerType" : tiles.markerPath,
+                    "id" : tiles.id,
+                  "temporalGroupID" : tiles.temporalGroupID}}})
+      
+         
+        tileMarkerPositions.push(pos)
+        const key = 'id';
+        const arrayUniqueByKey = [...new Map(tileMarkerPositions.map(item =>
+          [item[key], item])).values()];
+        
+        setTileMarkerAtt(arrayUniqueByKey)
+      
+      
+      
+    // clamp tiles to terrain
     //     //  let c3d_layers
     //     //  c3d_layers = viewer_ref.current.cesiumElement.scene.primitives._primitives.filter(pr => pr.constructor.name=='Cesium3DTileset')
     //     //  console.log(c3d_layers[0]._root._header.transform)
-
-
     //      var heightOffset = 20.0;
     //      var boundingSphere = tileset.boundingSphere;
     //      var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
@@ -187,39 +216,11 @@ function App() {
     //      var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, heightOffset);
     //      var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
     //      tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
-
-        //  viewer_ref.current.cesiumElement.scene.clampToHeightMostDetailed(c3d_layers[0]._root._header.boundingVolume)
+    //  viewer_ref.current.cesiumElement.scene.clampToHeightMostDetailed(c3d_layers[0]._root._header.boundingVolume)
   };
 
-  // const handleReady_rov_local = tileset => {
-  //   tileset._root.transform[14] = tileset._root.transform[14] +10;
-  //   tileset.description = "Survey Name : Ardmucknish Bay 2023"
-  // };
 
 
-  const handleReady_diver = tileset => {
-    tileset._root.transform[14] = tileset._root.transform[14] ;
-    tileset.description = "Survey Name : Ardmucknish Bay 2022"
-            // tileset._root.transform[14] = 0 ;
-            var position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
-            var cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
-      
-          
-             // Position the tileset
-             var tile_longitude = -5.43545876445209;  
-             var tile_latitude = 56.45732764483844;
-             var height = -30;
-             tileset._root.transform = Matrix4.IDENTITY;
-             tileset._root.transform = computeTransform(tile_latitude, tile_longitude, height); // or set tileset._root.transform directly
-            position = Matrix4.getTranslation(tileset._root.transform, new Cartesian3());
-            cartographicPosition = viewer_ref.current.cesiumElement.scene.globe.ellipsoid.cartesianToCartographic(position);
-            console.log('test');
-  };
-
-  const handleReady_creran = tileset => {
-    tileset._root.transform[14] = tileset._root.transform[14] +50 ;
-    tileset.description = "Survey Name : Creran"
-  };
 
   const [isHovering, setIsHovering] = useState(false)
   const handleHover = (mousePosIn) => {  
@@ -241,7 +242,7 @@ function App() {
 
 
   const handleModelRightClick = (mousePosIn) => {  
-    setInfoText((viewer_ref.current.cesiumElement.scene.pick(mousePosIn.position).content._tileset.description))
+    setInfoText((viewer_ref.current.cesiumElement.scene.pick(mousePosIn.position).content._tileset.featureIdLabel))
     setIsInfo({ isPaneOpenLeft: true })
 
   };
@@ -265,37 +266,70 @@ function App() {
   }
   
 
-  // date slider state
+  // date slider state visibility based on 
   const [sliderYear, setSliderYear] = useState([])
   const [dateSliderContainerVis, setDateSliderContainerVis] = useState(false)
-  // crude way to link date slider to tileset. Currently on for a single survey (2 tile sets ) and off for another
-   // date slider on
-  function handleArdBayClick() {
-    setDateSliderContainerVis(true)
-  }
-  // date slider off
-  function handleCreranClick() {
-    setDateSliderContainerVis(false)
+
+
+  function handleBillboardClick(mousePosIn) { 
+    const findMarker = tileMarkerAtt.map(markers => {
+    if (viewer_ref.current.cesiumElement.scene.pick(mousePosIn.position).id._name === markers.name)
+      {if (markers.temporalGroupID.length  > 0 )   
+        {setDateSliderContainerVis(true)}
+      else {{setDateSliderContainerVis(false)} }}
+    })
   }
 
 
-  const tileSetElements = tileset_ids.map(tileset => {
+
+  const markerElements = tileMarkerAtt.map(markers => {
+    return <Entity 
+    key={markers.id}
+    position={Cartesian3.fromDegrees(markers.longitude, markers.latitude,0)} 
+    name={markers.name}
+    onClick = {handleBillboardClick}>
+    <BillboardGraphics image={markers.markerType} scale={0.02} />
+  </Entity>
+  })
+
+  let sliderShow 
+  const tileSetElements = tileset_ids.map(tiles => {
+    if (tiles.temporalGroupID.length  > 0 )   
+      {if (sliderYear == tiles.year) {sliderShow = true}
+      else {sliderShow = false}}
+    else {sliderShow = true}
+
+
     return <Cesium3DTileset 
-    id={tileset.id}
-    url={IonResource.fromAssetId(tileset.IonResourceId)} 
-    onReady={eval(tileset.onReady)}
+    key={tiles.id}
+    featureIdLabel={tiles.description}
+    url={tiles.url} 
+    onReady={handleReady_tileset}
     onMouseEnter={handleHover}
     onMouseLeave={handleNoHover}
     onRightClick = {handleModelRightClick}
-    show = {sliderYear == tileset.year?  true : false}
+    show = {sliderShow}
     />
   })
+
+  const geoJsonElements = tileset_ids.map(geoJsons => {
+    if (geoJsons.geojsonPath.length > 1)  {
+    return  <GeoJsonDataSource data={geoJsonTranslateHeight(geoJsons.geojsonPath,geoJsons.geoJsonHeightAdjust)} 
+    show = {sliderYear == geoJsons.year?  true : false}
+    onLoad = {geoJsonReady}
+    key={geoJsons.id}/> }
+    else {
+    
+    }
+  })
+
+
 
   return (
   <div >
       
     <div className="map-container" style={{visibility: viewerReady ? 'visible' : 'hidden' }}   >
-      <Viewer ref={viewer_ref}>
+      <Viewer skyBox = {false} ref={viewer_ref}>
         <Scene>
           <ImageryLayer
             id = "bathy_imagery_layer"
@@ -304,41 +338,9 @@ function App() {
             alpha = {1}
             show = {isChecked? true : false}
           />
-          <Entity position={ard_position} name="Ard Bay"
-            onClick = {handleArdBayClick}>
-            <BillboardGraphics image="./alcyonium_digitatum_icon_red.png" scale={0.02} />
-          </Entity>
-          {/* <GeoJsonDataSource data={"./22_Alcyionium.json"}  */}
-             show = {sliderYear == 2022?  true : false}/>
-          {/* <Cesium3DTileset 
-            id="crack_ROV_local"
-            // below is syntax for loading tiles from local storage instead of cesium ion following:  // https://github.com/CesiumGS/3d-tiles-samples/blob/main/INSTRUCTIONS.md
-            url={" http://localhost:8003/tileset.json"} 
-            onReady={handleReady_rov_local}
-            onMouseEnter={handleHover}
-            onMouseLeave={handleNoHover}
-            onRightClick = {handleModelRightClick}
-            show = {sliderYear == 2023?  true : false}
-          /> */}
-
+          {markerElements}
           {tileSetElements}
-
-
-          {/* <Entity position={creran_position} name="Creran"
-            onClick = {handleCreranClick}>
-            <BillboardGraphics image="./serp_icon_red.png" scale={0.02} />
-            <EntityDescription>
-              <h1>Creran</h1>
-              <p>Serpula vermiclaris</p>
-            </EntityDescription>
-          </Entity>
-          <Cesium3DTileset 
-            id="Creran"
-            url={IonResource.fromAssetId(2311985)} 
-            onMouseEnter={handleHover}
-            onMouseLeave={handleNoHover} 
-            onReady={handleReady_creran}
-          />  */}
+          {geoJsonElements}
         </Scene>
       </Viewer>
 
@@ -356,9 +358,7 @@ function App() {
  
     <div className="nav-bar-top">
     </div>
-
-    <img src="./new_logo_draft.png" alt=" "  className="trito-logo"/>
-    
+    <img src="./Tritonia_White.png" alt=" "  className="trito-logo"/>
     <div className="logo-text">
       Hydrophis
     </div>
