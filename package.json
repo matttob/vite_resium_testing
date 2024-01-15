@@ -10,8 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@turf/turf": "^6.5.0",
     "aws-amplify": "^6.0.5",
-    "cesium": "^1.110.0",
+    "cesium": "^1.113.0",
     "d3-scale": "^4.0.2",
     "date-fns": "^2.30.0",
     "react": "^18.2.0",
@@ -21,6 +22,7 @@
     "react-icons": "^4.12.0",
     "react-router-dom": "^6.19.0",
     "react-sliding-pane": "^7.3.0",
+    "require": "^2.4.20",
     "resium": "^1.17.2",
     "styled-components": "^5.3.10"
   },
